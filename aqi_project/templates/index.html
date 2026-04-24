@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AQI Intelligence — India Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+
+<!-- ════════ SIDEBAR ════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <svg class="logo-mark" viewBox="0 0 36 36" fill="none">
+      <circle cx="18" cy="18" r="17" stroke="url(#slg)" stroke-width="1.5"/>
+      <path d="M10 23C10 14 14 10 18 10C22 10 26 14 26 23" stroke="url(#slg)" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="18" cy="23" r="3" fill="url(#slg)"/>
+      <defs><linearGradient id="slg" x1="0" y1="0" x2="36" y2="36"><stop stop-color="#4f9eff"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs>
+    </svg>
+    <div><span class="logo-name">AQI Intel</span><span class="logo-sub">India Dashboard</span></div>
+  </div>
+
+  <div class="city-picker">
+    <div class="cp-label">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Select City
+    </div>
+    <div class="cp-select-wrap">
+      <select id="citySelect" class="cp-select"><option>Loading...</option></select>
+      <svg class="cp-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a class="snav active" onclick="scrollTo('sec-live')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Live AQI
+    </a>
+    <a class="snav" onclick="scrollTo('sec-pollutants')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>Pollutants
+    </a>
+    <a class="snav" onclick="scrollTo('sec-forecast')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Forecast
+    </a>
+    <a class="snav" onclick="scrollTo('sec-history')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Historical
+    </a>
+    <a class="snav" onclick="scrollTo('sec-health')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Health
+    </a>
+  </nav>
+
+  <div class="sidebar-model-card">
+    <div class="smc-title">ML Model</div>
+    <div class="smc-algo">Random Forest</div>
+    <div class="smc-metrics">
+      <div class="smc-metric"><span class="smc-key">R² Score</span><span class="smc-val" id="metricR2">—</span></div>
+      <div class="smc-metric"><span class="smc-key">MAE</span><span class="smc-val" id="metricMAE">—</span></div>
+    </div>
+  </div>
+  <div class="sidebar-updated">
+    <div class="live-pulse"><span class="lpulse-dot"></span>Live</div>
+    <span id="lastUpdated">—</span>
+  </div>
+</aside>
+
+<!-- ════════ MAIN ════════ -->
+<main class="main-content">
+
+  <div class="topbar">
+    <div class="topbar-logo">
+      <svg width="26" height="26" viewBox="0 0 36 36" fill="none"><circle cx="18" cy="18" r="17" stroke="url(#tlg2)" stroke-width="1.5"/><path d="M10 23C10 14 14 10 18 10C22 10 26 14 26 23" stroke="url(#tlg2)" stroke-width="2.5" stroke-linecap="round"/><circle cx="18" cy="23" r="3" fill="url(#tlg2)"/><defs><linearGradient id="tlg2" x1="0" y1="0" x2="36" y2="36"><stop stop-color="#4f9eff"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs></svg>
+      AQI Intel
+    </div>
+    <button class="menu-btn" onclick="toggleSidebar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+
+  <!-- ── SECTION: LIVE AQI ── -->
+  <section class="dash-section" id="sec-live">
+    <div class="section-header">
+      <h2 class="section-title">Live Air Quality</h2>
+      <div class="section-city-badge" id="cityBadge">Delhi</div>
+    </div>
+
+    <!-- TOP: AQI Card + Pollutants -->
+    <div class="live-grid">
+
+      <!-- AQI STATUS CARD -->
+      <div class="aqi-status-card aqi-mod" id="aqiCard">
+        <div class="asc-shine"></div>
+        <div class="asc-border"></div>
+        <div class="asc-top">
+          <div class="asc-left">
+            <div class="asc-live-row"><span class="asc-live-dot"></span><span class="asc-live-lbl">Live AQI</span></div>
+            <div class="asc-number" id="aqiNumber">—</div>
+            <div class="asc-scale-lbl">(AQI-IN · CPCB Standard)</div>
+          </div>
+          <div class="asc-mid">
+            <div class="asc-poll-chip">
+              <div class="asc-poll-name">PM2.5</div>
+              <div class="asc-poll-val" id="aqiPm25">—</div>
+              <div class="asc-poll-unit">µg/m³</div>
+            </div>
+            <div class="asc-poll-chip">
+              <div class="asc-poll-name">PM10</div>
+              <div class="asc-poll-val" id="aqiPm10">—</div>
+              <div class="asc-poll-unit">µg/m³</div>
+            </div>
+          </div>
+          <div class="asc-right">
+            <div class="asc-quality-lbl">Air Quality is</div>
+            <div class="asc-badge" id="aqiBadge">—</div>
+          </div>
+        </div>
+        <div class="asc-scale-wrap">
+          <div class="asc-scale-track">
+            <div class="asc-scale-ptr" id="aqiScalePtr" style="left:0%"></div>
+          </div>
+          <div class="asc-scale-labels">
+            <span>Good</span><span>Moderate</span><span>Poor</span><span>Unhealthy</span><span>Severe</span><span>Hazardous</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- POLLUTANTS CARD -->
+      <div class="poll-card">
+        <div class="poll-title-row">
+          <span class="poll-title">Primary Air Pollutants</span>
+          <span class="poll-city-lbl" id="pollCityLbl">—</span>
+        </div>
+        <div class="poll-grid" id="pollGrid"></div>
+      </div>
+    </div>
+
+    <!-- BOTTOM: Wind + Weather -->
+    <div class="live-bottom-row" style="margin-top:18px">
+
+      <!-- WIND -->
+      <div class="wind-card">
+        <div class="wind-left">
+          <div class="wind-eyebrow">Wind</div>
+          <div class="wind-speed-row">
+            <span class="wind-speed-num" id="windSpeed">—</span>
+            <span class="wind-speed-unit">km/h</span>
+          </div>
+          <div class="wind-dir-row">
+            <div class="wind-dir-badge" id="windDir">—</div>
+            <span class="wind-deg-lbl" id="windDeg">—°</span>
+          </div>
+          <div class="wind-msg" id="windMsg">—</div>
+        </div>
+        <div class="wind-right">
+          <canvas id="compassCanvas" width="130" height="130"></canvas>
+          <div class="wind-compass-lbl">Wind Direction</div>
+        </div>
+      </div>
+
+      <!-- WEATHER -->
+      <div class="weather-card">
+        <span class="card-eyebrow">Weather Conditions</span>
+        <div class="weather-hero">
+          <div>
+            <div class="wh-temp" id="wTemp">—°</div>
+            <div class="wh-desc" id="wDesc">—</div>
+            <div class="wh-feels" id="wFeels">Feels like —°C</div>
+          </div>
+          <img id="wIcon" src="" alt="" class="wh-icon"/>
+        </div>
+        <div class="weather-stats">
+          <div class="ws-item"><span class="ws-ico">💧</span><div><div class="ws-val" id="wHum">—</div><div class="ws-lbl">Humidity</div></div></div>
+          <div class="ws-item"><span class="ws-ico">💨</span><div><div class="ws-val" id="wWind">—</div><div class="ws-lbl">Wind</div></div></div>
+          <div class="ws-item"><span class="ws-ico">🌡️</span><div><div class="ws-val" id="wPress">—</div><div class="ws-lbl">Pressure</div></div></div>
+          <div class="ws-item"><span class="ws-ico">👁️</span><div><div class="ws-val" id="wVis">—</div><div class="ws-lbl">Visibility</div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SECTION: POLLUTANTS DETAIL ── -->
+  <section class="dash-section" id="sec-pollutants">
+    <div class="section-header">
+      <h2 class="section-title">Pollutant Details</h2>
+      <span class="section-note">30-day average from dataset</span>
+    </div>
+    <div class="poll-section-grid" id="pollSectionGrid"></div>
+  </section>
+
+  <!-- ── SECTION: FORECAST ── -->
+  <section class="dash-section" id="sec-forecast">
+    <div class="section-header">
+      <h2 class="section-title">AQI Forecast</h2>
+      <span class="section-note">ML Prediction + Hourly Weather</span>
+    </div>
+    <div class="forecast-top">
+      <div class="card">
+        <div class="card-eyebrow">Past 3 Days (CSV Dataset)</div>
+        <div class="fcast-row" id="pastCards"></div>
+      </div>
+      <div class="card">
+        <div class="fcast-head-row">
+          <span class="card-eyebrow">Next 2 Days (ML Prediction)</span>
+          <div class="ml-tag">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Random Forest
+          </div>
+        </div>
+        <div class="fcast-row" id="forecastCards"></div>
+      </div>
+    </div>
+    <div class="card hourly-card">
+      <span class="card-eyebrow">Hourly Forecast (24h)</span>
+      <div class="hourly-strip" id="hourlyStrip"></div>
+      <div class="chart-wrap-sm"><canvas id="hourlyChart"></canvas></div>
+    </div>
+  </section>
+
+  <!-- ── SECTION: HISTORICAL ── -->
+  <section class="dash-section" id="sec-history">
+    <div class="section-header">
+      <h2 class="section-title">Historical AQI Data</h2>
+      <div class="range-tabs" id="rangeTabs">
+        <button class="rtab active" data-range="7d"      onclick="loadHistory(this,'7d')">7 Days</button>
+        <button class="rtab"        data-range="30d"     onclick="loadHistory(this,'30d')">30 Days</button>
+        <button class="rtab"        data-range="monthly" onclick="loadHistory(this,'monthly')">Monthly Avg</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="hist-stats" id="histStats"></div>
+      <div class="hist-chart-wrap"><canvas id="histChart"></canvas></div>
+    </div>
+  </section>
+
+  <!-- ── SECTION: SCALE REFERENCE ── -->
+  <section class="dash-section" id="sec-scale">
+    <div class="section-header"><h2 class="section-title">AQI Scale Reference</h2></div>
+    <div class="scale-grid">
+      <div class="scale-card"><div class="sc-range" style="color:#22c55e">0–50</div><div class="sc-name">Good</div><div class="sc-bar" style="background:#22c55e"></div><div class="sc-tip">Air quality satisfactory. Safe for all outdoor activities.</div></div>
+      <div class="scale-card"><div class="sc-range" style="color:#eab308">51–100</div><div class="sc-name">Satisfactory</div><div class="sc-bar" style="background:#eab308"></div><div class="sc-tip">Minor discomfort for sensitive people. Generally acceptable.</div></div>
+      <div class="scale-card"><div class="sc-range" style="color:#f97316">101–200</div><div class="sc-name">Moderate</div><div class="sc-bar" style="background:#f97316"></div><div class="sc-tip">Breathing discomfort on prolonged outdoor exposure.</div></div>
+      <div class="scale-card"><div class="sc-range" style="color:#ef4444">201–300</div><div class="sc-name">Poor</div><div class="sc-bar" style="background:#ef4444"></div><div class="sc-tip">Discomfort for most on extended outdoor activity.</div></div>
+      <div class="scale-card"><div class="sc-range" style="color:#a855f7">301–400</div><div class="sc-name">Very Poor</div><div class="sc-bar" style="background:#a855f7"></div><div class="sc-tip">Risk of respiratory illness on prolonged exposure.</div></div>
+      <div class="scale-card"><div class="sc-range" style="color:#9f1239">401+</div><div class="sc-name">Severe</div><div class="sc-bar" style="background:#9f1239"></div><div class="sc-tip">Serious health impact — emergency conditions for all.</div></div>
+    </div>
+  </section>
+
+  <!-- ── SECTION: HEALTH ── -->
+  <section class="dash-section" id="sec-health">
+    <div class="section-header">
+      <h2 class="section-title">Health Recommendations</h2>
+      <div class="health-aqi-chip" id="healthChip">—</div>
+    </div>
+    <div class="health-grid" id="healthGrid"></div>
+  </section>
+
+</main>
+
+<div class="loader-overlay" id="loaderOverlay">
+  <div class="loader-box">
+    <div class="loader-rings"><div class="lr lr1"></div><div class="lr lr2"></div><div class="lr lr3"></div></div>
+    <div class="loader-label">Fetching data…</div>
+  </div>
+</div>
+
+<script src="/static/script.js"></script>
+</body>
+</html>

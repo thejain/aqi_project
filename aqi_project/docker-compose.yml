@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  aqi-app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY}
+      - FLASK_DEBUG=false
+    volumes:
+      - .:/app
+    command: gunicorn --bind 0.0.0.0:5000 app:app
+    restart: unless-stopped

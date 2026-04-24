@@ -1,0 +1,244 @@
+/* ═══════════════════════════════════════════════════════════
+   AQI Intelligence Dashboard v3 — style.css
+   Layout: Fixed sidebar + main content
+═══════════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090f;--bg2:#0b0e18;--bcard:rgba(255,255,255,.036);--bcard-h:rgba(255,255,255,.058);
+  --border:rgba(255,255,255,.07);--border-h:rgba(255,255,255,.14);
+  --text:#e2e8f8;--text2:#7a8aaa;--text3:#4a5a7a;
+  --accent:#4f9eff;--accent2:#a855f7;
+  --good:#22c55e;--sat:#eab308;--mod:#f97316;--poor:#ef4444;--vpoor:#a855f7;--severe:#9f1239;
+  --r:14px;--rsm:10px;--sw:260px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 70% 50% at 12% 10%,rgba(79,158,255,.06) 0%,transparent 60%),
+    radial-gradient(ellipse 55% 45% at 90% 85%,rgba(168,85,247,.05) 0%,transparent 55%)}
+
+/* ── SIDEBAR ── */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sw);background:rgba(7,9,15,.93);backdrop-filter:blur(20px);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:200;padding:22px 16px;overflow-y:auto;transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.sidebar-logo{display:flex;align-items:center;gap:11px;margin-bottom:26px;padding:0 6px}
+.logo-mark{width:34px;height:34px;flex-shrink:0}
+.logo-name{display:block;font-weight:700;font-size:16px;letter-spacing:-.3px}
+.logo-sub{display:block;font-size:11px;color:var(--text2)}
+.city-picker{margin-bottom:26px}
+.cp-label{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:7px;padding:0 4px}
+.cp-select-wrap{position:relative}
+.cp-select{width:100%;appearance:none;background:rgba(255,255,255,.05);border:1px solid var(--border-h);color:var(--text);font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;padding:10px 34px 10px 13px;border-radius:var(--rsm);cursor:pointer;transition:border-color .2s,box-shadow .2s}
+.cp-select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,158,255,.15)}
+.cp-select option{background:#0d1117}
+.cp-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text2);pointer-events:none}
+.sidebar-nav{display:flex;flex-direction:column;gap:3px;margin-bottom:auto}
+.snav{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--rsm);font-size:14px;font-weight:500;color:var(--text2);text-decoration:none;cursor:pointer;transition:background .2s,color .2s;border:1px solid transparent}
+.snav svg{width:17px;height:17px;flex-shrink:0}
+.snav:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.snav.active{background:linear-gradient(135deg,rgba(79,158,255,.14),rgba(168,85,247,.09));color:var(--accent);border-color:rgba(79,158,255,.14)}
+.sidebar-model-card{margin-top:22px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--rsm);padding:13px}
+.smc-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:3px}
+.smc-algo{font-size:14px;font-weight:700;margin-bottom:9px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.smc-metrics{display:flex;flex-direction:column;gap:5px}
+.smc-metric{display:flex;justify-content:space-between;align-items:center}
+.smc-key{font-size:12px;color:var(--text2)}
+.smc-val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:var(--text)}
+.sidebar-updated{margin-top:14px;display:flex;align-items:center;justify-content:space-between;padding:0 4px;font-size:11px;color:var(--text3)}
+.live-pulse{display:flex;align-items:center;gap:5px;color:var(--good);font-weight:600;font-size:11px}
+.lpulse-dot{width:6px;height:6px;border-radius:50%;background:var(--good);animation:lpulse 1.8s ease-in-out infinite}
+@keyframes lpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.5)}}
+
+/* ── MAIN ── */
+.main-content{margin-left:var(--sw);flex:1;padding:0 0 60px;position:relative;z-index:1;min-width:0}
+.topbar{display:none;align-items:center;justify-content:space-between;padding:13px 20px;background:rgba(7,9,15,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.topbar-logo{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700}
+.menu-btn{background:none;border:none;color:var(--text);cursor:pointer;padding:4px}
+.dash-section{padding:30px 28px;border-bottom:1px solid var(--border)}
+.dash-section:last-child{border-bottom:none}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.section-title{font-size:20px;font-weight:700;letter-spacing:-.3px}
+.section-note{font-size:12px;color:var(--text2)}
+.section-city-badge{font-size:13px;font-weight:600;padding:5px 14px;background:linear-gradient(135deg,rgba(79,158,255,.15),rgba(168,85,247,.1));border:1px solid rgba(79,158,255,.2);border-radius:20px;color:var(--accent)}
+
+/* ── CARD BASE ── */
+.card{background:var(--bcard);border:1px solid var(--border);border-radius:var(--r);padding:22px;position:relative;overflow:hidden;transition:border-color .25s,transform .2s}
+.card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.022) 0%,transparent 55%);pointer-events:none;border-radius:var(--r)}
+.card:hover{border-color:var(--border-h)}
+.card-eyebrow{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text2);margin-bottom:14px}
+
+/* ══════════════════════════════════════
+   LIVE AQI GRID  (top row)
+══════════════════════════════════════ */
+.live-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+
+/* ── AQI STATUS CARD ── */
+.aqi-status-card{border-radius:var(--r);padding:22px;position:relative;overflow:hidden;transition:background 1.1s ease,box-shadow 1.1s ease;min-height:210px}
+.aqi-status-card.aqi-good    {background:linear-gradient(135deg,#14532d 0%,#052e10 100%);box-shadow:0 0 40px rgba(34,197,94,.15)}
+.aqi-status-card.aqi-sat     {background:linear-gradient(135deg,#713f12 0%,#2d1a04 100%);box-shadow:0 0 40px rgba(234,179,8,.12)}
+.aqi-status-card.aqi-mod     {background:linear-gradient(135deg,#7c2d12 0%,#3a1204 100%);box-shadow:0 0 40px rgba(249,115,22,.15)}
+.aqi-status-card.aqi-poor    {background:linear-gradient(135deg,#7f1d1d 0%,#3b0000 100%);box-shadow:0 0 40px rgba(239,68,68,.18)}
+.aqi-status-card.aqi-vpoor   {background:linear-gradient(135deg,#4a1d96 0%,#1e0a40 100%);box-shadow:0 0 40px rgba(168,85,247,.18)}
+.aqi-status-card.aqi-severe  {background:linear-gradient(135deg,#4c0519 0%,#200009 100%);box-shadow:0 0 40px rgba(159,18,57,.2)}
+.asc-shine{position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.045) 0%,transparent 50%);pointer-events:none}
+.asc-border{position:absolute;inset:0;border:1px solid rgba(255,255,255,.12);border-radius:var(--r);pointer-events:none}
+.asc-top{display:grid;grid-template-columns:auto 1fr auto;align-items:start;gap:14px;margin-bottom:16px}
+.asc-left{}
+.asc-live-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.asc-live-dot{width:8px;height:8px;border-radius:50%;background:#ef4444;flex-shrink:0;animation:lpulse 1.4s ease-in-out infinite}
+.asc-live-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.9px}
+.asc-number{font-family:'JetBrains Mono',monospace;font-size:68px;font-weight:700;color:#fff;line-height:1;letter-spacing:-3px}
+.asc-scale-lbl{font-size:10px;color:rgba(255,255,255,.45);margin-top:4px}
+.asc-mid{display:flex;flex-direction:column;gap:8px;justify-content:flex-start;padding-top:4px}
+.asc-poll-chip{background:rgba(0,0,0,.28);border-radius:9px;padding:8px 12px;min-width:86px;text-align:center;border:1px solid rgba(255,255,255,.08)}
+.asc-poll-name{font-size:9px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px}
+.asc-poll-val{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700;color:#fff;line-height:1}
+.asc-poll-unit{font-size:9px;color:rgba(255,255,255,.4);margin-top:1px}
+.asc-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;padding-top:4px}
+.asc-quality-lbl{font-size:11px;color:rgba(255,255,255,.5)}
+.asc-badge{padding:7px 18px;border-radius:20px;font-size:14px;font-weight:700;color:#fff;border:1px solid rgba(255,255,255,.22);letter-spacing:.2px;white-space:nowrap}
+.asc-scale-wrap{margin-top:4px}
+.asc-scale-track{height:8px;border-radius:4px;background:linear-gradient(90deg,#22c55e 0%,#eab308 20%,#f97316 40%,#ef4444 60%,#a855f7 80%,#7f0023 100%);position:relative;margin-bottom:6px}
+.asc-scale-ptr{position:absolute;top:50%;width:13px;height:13px;border-radius:50%;background:#fff;border:2px solid rgba(0,0,0,.4);transform:translate(-50%,-50%);box-shadow:0 2px 6px rgba(0,0,0,.5);transition:left 1s cubic-bezier(.4,0,.2,1)}
+.asc-scale-labels{display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,.42);font-weight:500}
+
+/* ── POLLUTANTS CARD ── */
+.poll-card{background:var(--bcard);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.poll-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.poll-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text2)}
+.poll-city-lbl{font-size:11px;color:var(--accent);font-weight:600}
+.poll-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.pc{background:rgba(255,255,255,.03);border:1.5px solid rgba(34,197,94,.22);border-radius:var(--rsm);padding:12px 11px;position:relative;overflow:hidden;transition:border-color .2s,transform .15s,background .2s;cursor:default}
+.pc:hover{border-color:rgba(34,197,94,.5);transform:translateY(-3px);background:rgba(34,197,94,.04)}
+.pc-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:7px}
+.pc-name{font-size:13px;font-weight:700;color:var(--text)}
+.pc-icon{width:30px;height:30px;border-radius:50%;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:700;color:#22c55e;flex-shrink:0}
+.pc-val{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;color:#fff;line-height:1;letter-spacing:-1px}
+.pc-unit{font-size:9.5px;color:var(--text2);margin-top:2px}
+.pc-sub{font-size:10px;color:var(--text3);margin-top:7px;font-weight:500}
+
+/* ══════════════════════════════════════
+   BOTTOM LIVE ROW (wind + weather)
+══════════════════════════════════════ */
+.live-bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+
+/* ── WIND CARD ── */
+.wind-card{background:var(--bcard);border:1px solid var(--border);border-radius:var(--r);padding:22px;display:flex;align-items:center;gap:20px;position:relative;overflow:hidden}
+.wind-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.018) 0%,transparent 55%);pointer-events:none}
+.wind-left{flex:1;min-width:0}
+.wind-eyebrow{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text2);margin-bottom:13px}
+.wind-speed-row{display:flex;align-items:baseline;gap:6px;margin-bottom:6px}
+.wind-speed-num{font-family:'JetBrains Mono',monospace;font-size:42px;font-weight:700;color:#fff;line-height:1;letter-spacing:-2px}
+.wind-speed-unit{font-size:14px;color:var(--text2);font-weight:500}
+.wind-dir-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.wind-dir-badge{background:rgba(79,158,255,.14);border:1px solid rgba(79,158,255,.25);border-radius:7px;padding:4px 11px;font-size:13px;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace}
+.wind-deg-lbl{font-size:11px;color:var(--text3)}
+.wind-msg{font-size:12px;color:var(--text2);line-height:1.55}
+.wind-right{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px}
+.wind-compass-lbl{font-size:11px;color:var(--text2)}
+
+/* ── WEATHER CARD ── */
+.weather-card{background:var(--bcard);border:1px solid var(--border);border-radius:var(--r);padding:22px}
+.weather-hero{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
+.wh-temp{font-size:50px;font-weight:800;line-height:1;letter-spacing:-2px}
+.wh-desc{font-size:14px;color:var(--text2);margin-top:4px}
+.wh-feels{font-size:11px;color:var(--text3);margin-top:2px}
+.wh-icon{width:54px;height:54px}
+.weather-stats{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.ws-item{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:9px;padding:10px 11px;transition:background .2s}
+.ws-item:hover{background:rgba(255,255,255,.055)}
+.ws-ico{font-size:17px}
+.ws-val{font-size:14px;font-weight:700}
+.ws-lbl{font-size:10px;color:var(--text2)}
+
+/* ══════════════════════════════════════
+   POLLUTANT SECTION (standalone)
+══════════════════════════════════════ */
+.poll-section-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:13px}
+
+/* ══════════════════════════════════════
+   FORECAST
+══════════════════════════════════════ */
+.forecast-top{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.fcast-head-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.fcast-head-row .card-eyebrow{margin-bottom:0}
+.ml-tag{display:flex;align-items:center;gap:5px;font-size:10px;padding:3px 9px;border-radius:8px;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.22);color:var(--accent2);font-weight:600}
+.fcast-row{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.fcast-day-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--rsm);padding:15px 11px;text-align:center;position:relative;overflow:hidden;transition:transform .2s,border-color .2s}
+.fcast-day-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--fc,var(--accent))}
+.fcast-day-card:hover{transform:translateY(-2px);border-color:var(--border-h)}
+.fd-day{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text2)}
+.fd-date{font-size:10px;color:var(--text3);margin-bottom:7px}
+.fd-aqi{font-size:32px;font-weight:800;line-height:1;letter-spacing:-1px}
+.fd-bucket{font-size:10px;font-weight:700;margin-top:4px}
+
+/* hourly */
+.hourly-card{}
+.hourly-strip{display:flex;gap:9px;overflow-x:auto;padding-bottom:10px;margin-bottom:14px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.hourly-strip::-webkit-scrollbar{height:3px}
+.hourly-strip::-webkit-scrollbar-thumb{background:var(--border-h);border-radius:2px}
+.h-slot{flex-shrink:0;display:flex;flex-direction:column;align-items:center;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--rsm);padding:11px 13px;gap:4px;min-width:70px;transition:background .2s,border-color .2s}
+.h-slot:hover{background:rgba(255,255,255,.06);border-color:var(--border-h)}
+.h-time{font-size:11px;font-weight:600;color:var(--text2)}
+.h-temp{font-size:14px;font-weight:700}
+.h-hum{font-size:10px;color:var(--text2)}
+.chart-wrap-sm{height:96px}
+
+/* ══════════════════════════════════════
+   HISTORICAL
+══════════════════════════════════════ */
+.range-tabs{display:flex;gap:6px}
+.rtab{padding:5px 14px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s}
+.rtab:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.rtab.active{background:linear-gradient(135deg,rgba(79,158,255,.2),rgba(168,85,247,.15));border-color:rgba(79,158,255,.3);color:var(--accent)}
+.hist-stats{display:flex;gap:22px;margin-bottom:17px;flex-wrap:wrap}
+.hs-item{}
+.hs-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px}
+.hs-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700}
+.hist-chart-wrap{height:255px}
+
+/* ══════════════════════════════════════
+   SCALE REFERENCE
+══════════════════════════════════════ */
+.scale-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:13px}
+.scale-card{background:var(--bcard);border:1px solid var(--border);border-radius:var(--r);padding:18px 15px;position:relative;overflow:hidden;transition:transform .2s,background .2s}
+.scale-card:hover{transform:translateY(-3px);background:var(--bcard-h)}
+.sc-range{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700}
+.sc-name{font-size:15px;font-weight:700;margin:5px 0 8px}
+.sc-bar{height:3px;border-radius:2px;margin-bottom:9px}
+.sc-tip{font-size:11px;color:var(--text2);line-height:1.5}
+
+/* ══════════════════════════════════════
+   HEALTH
+══════════════════════════════════════ */
+.health-aqi-chip{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;padding:5px 14px;border-radius:20px;background:rgba(255,255,255,.06);border:1px solid var(--border-h)}
+.health-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}
+.health-card{background:var(--bcard);border:1px solid var(--border);border-radius:var(--r);padding:20px 18px;display:flex;flex-direction:column;gap:9px;transition:transform .2s,background .2s,border-color .2s;position:relative;overflow:hidden}
+.health-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--hc,var(--accent))}
+.health-card:hover{transform:translateY(-3px);background:var(--bcard-h)}
+.health-card.safe{--hc:var(--good)}.health-card.caution{--hc:var(--mod)}.health-card.danger{--hc:var(--poor)}
+.hc-icon{font-size:26px}.hc-title{font-size:14px;font-weight:700}.hc-desc{font-size:12px;color:var(--text2);line-height:1.6}
+
+/* ══════════════════════════════════════
+   LOADER
+══════════════════════════════════════ */
+.loader-overlay{display:none;position:fixed;inset:0;z-index:999;background:rgba(7,9,15,.82);backdrop-filter:blur(10px);align-items:center;justify-content:center}
+.loader-overlay.active{display:flex}
+.loader-box{display:flex;flex-direction:column;align-items:center;gap:18px}
+.loader-rings{position:relative;width:60px;height:60px}
+.lr{position:absolute;border-radius:50%;border:2px solid transparent;animation:spin 1.2s linear infinite}
+.lr1{inset:0;border-top-color:var(--accent)}.lr2{inset:8px;border-top-color:var(--accent2);animation-duration:.8s;animation-direction:reverse}.lr3{inset:16px;border-top-color:var(--good);animation-duration:1.6s}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-label{font-size:14px;color:var(--text2);letter-spacing:.5px}
+
+/* ══════════════════════════════════════
+   ANIMATIONS
+══════════════════════════════════════ */
+@keyframes slideIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.card,.aqi-status-card,.poll-card,.wind-card,.weather-card{animation:slideIn .45s ease both}
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media(max-width:1200px){.poll-section-grid{grid-template-columns:repeat(3,1fr)}.scale-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:1000px){.live-grid{grid-template-columns:1fr}.live-bottom-row{grid-template-columns:1fr}.poll-grid{grid-template-columns:1fr 1fr 1fr}.health-grid{grid-template-columns:repeat(2,1fr)}.forecast-top{grid-template-columns:1fr}}
+@media(max-width:800px){:root{--sw:240px}.poll-section-grid{grid-template-columns:repeat(2,1fr)}.scale-grid{grid-template-columns:repeat(2,1fr)}.fcast-row{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main-content{margin-left:0}.topbar{display:flex}.dash-section{padding:22px 16px}.live-grid{grid-template-columns:1fr}.poll-section-grid{grid-template-columns:1fr 1fr}.scale-grid{grid-template-columns:1fr 1fr}.health-grid{grid-template-columns:1fr}}
