@@ -9,7 +9,6 @@ let currentAQI   = 0;
 let currentRange = '30d';
 let zoneCities   = {};
 let histChart    = null;
-let hourlyChart  = null;
 let compassDeg   = 0;
 let compassAnimId= null;
 
@@ -50,8 +49,10 @@ async function init() {
     const sel = $('citySelect');
     sel.innerHTML = '';
     cities.cities.forEach(c => { const o = document.createElement('option'); o.value = o.textContent = c; sel.appendChild(o); });
-    sel.addEventListener('change', () => loadCity(sel.value));
-    await loadCity(cities.cities[0]);
+    sel.addEventListener('change', async () => {
+    await loadCity(sel.value);
+    });  
+  await loadCity(cities.cities[0]);
     // Load metrics separately
     try {
       const metrics = await api('/api/model_metrics');
@@ -72,13 +73,19 @@ async function loadCity(city) {
   $('pollCityLbl').textContent = city;
 
   try {
-    const [liveData, weatherData, windData, pastData, zoneData] = await Promise.all([
-      api(`/api/live_aqi?city=${encodeURIComponent(city)}`),
-      api(`/api/weather?city=${encodeURIComponent(city)}`),
-      api(`/api/wind?city=${encodeURIComponent(city)}`),
-      api(`/api/past_aqi?city=${encodeURIComponent(city)}`),
-      api('/api/zone_cities'),
-    ]);
+    const results = await Promise.allSettled([
+  api(`/api/live_aqi?city=${encodeURIComponent(city)}`),
+  api(`/api/weather?city=${encodeURIComponent(city)}`),
+  api(`/api/wind?city=${encodeURIComponent(city)}`),
+  api(`/api/past_aqi?city=${encodeURIComponent(city)}`),
+  api('/api/zone_cities')
+]);
+
+const liveData    = results[0].status === 'fulfilled' ? results[0].value : {};
+const weatherData = results[1].status === 'fulfilled' ? results[1].value : {};
+const windData    = results[2].status === 'fulfilled' ? results[2].value : {};
+const pastData    = results[3].status === 'fulfilled' ? results[3].value : { past: [] };
+const zoneData    = results[4].status === 'fulfilled' ? results[4].value : { zones: {} };
     currentAQI = liveData.aqi;
     zoneCities = zoneData.zones;
 
@@ -90,7 +97,6 @@ async function loadCity(city) {
     renderPastCards(pastData);
     renderHealth(liveData.aqi);
     loadForecast(city);
-    loadHourly(city);
     loadHistory(null, currentRange);
     $('lastUpdated').textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
   } catch(e) { console.error('City load:', e); }
@@ -207,25 +213,31 @@ async function renderPollSection(city) {
    WEATHER
 ═══════════════════════════════════════════════════ */
 function renderWeather(d) {
-  $('wTemp').textContent   = d.temp + '°';
-  $('wDesc').textContent   = d.description;
-  $('wFeels').textContent  = `Feels like ${d.feels_like}°C`;
-  $('wHum').textContent    = d.humidity + '%';
-  $('wWind').textContent   = d.wind_speed + ' km/h';
-  $('wPress').textContent  = d.pressure + ' hPa';
-  $('wVis').textContent    = d.visibility + ' km';
-  if (d.icon) { $('wIcon').src = `https://openweathermap.org/img/wn/${d.icon}@2x.png`; $('wIcon').alt = d.description; }
+  console.log("Weather Data:", d);
+
+  $('wTemp').textContent   = d.temp != null ? d.temp + '°C' : '—';
+  $('wDesc').textContent   = d.description || 'Unavailable';
+  $('wFeels').textContent  = d.feels_like != null ? `Feels like ${d.feels_like}°C` : '';
+  $('wHum').textContent    = d.humidity != null ? d.humidity + '%' : '—';
+  $('wWind').textContent   = d.wind_speed != null ? d.wind_speed + ' km/h' : '—';
+  $('wPress').textContent  = d.pressure != null ? d.pressure + ' hPa' : '—';
+  $('wVis').textContent    = d.visibility != null ? d.visibility + ' km' : '—';
+
+  if (d.icon) {
+    $('wIcon').src = `https://openweathermap.org/img/wn/${d.icon}@2x.png`;
+    $('wIcon').alt = d.description || 'Weather';
+  }
 }
 
 /* ═══════════════════════════════════════════════════
    WIND + ANIMATED COMPASS
 ═══════════════════════════════════════════════════ */
 function renderWind(d) {
-  $('windSpeed').textContent = d.speed_kph;
-  $('windDir').textContent   = d.direction;
-  $('windDeg').textContent   = d.deg + '°';
-  $('windMsg').textContent   = d.dispersion;
-  animateCompassTo(d.deg);
+  $('windSpeed').textContent = d.speed_kph != null ? d.speed_kph + ' km/h' : '—';
+  $('windDir').textContent   = d.direction || '—';
+  $('windDeg').textContent   = d.deg != null ? d.deg + '°' : '—';
+  $('windMsg').textContent   = d.dispersion || '—';
+  animateCompassTo(d.deg || 0);
 }
 
 function animateCompassTo(targetDeg) {
@@ -350,43 +362,16 @@ async function loadForecast(city) {
 /* ═══════════════════════════════════════════════════
    HOURLY
 ═══════════════════════════════════════════════════ */
-async function loadHourly(city) {
-  try {
-    const data = await api(`/api/hourly_forecast?city=${encodeURIComponent(city)}`);
-    const strip = $('hourlyStrip');
-    strip.innerHTML = '';
-    data.hours.forEach(h => {
-      const slot = document.createElement('div'); slot.className = 'h-slot';
-      slot.innerHTML = `
-        <div class="h-time">${h.label}</div>
-        <img width="32" height="32" src="https://openweathermap.org/img/wn/${h.icon}.png" alt="${h.desc}" loading="lazy"/>
-        <div class="h-temp">${h.temp}°</div>
-        <div class="h-hum">💧${h.humidity}%</div>
-        <div class="h-hum">💨${h.wind_kph}</div>`;
-      strip.appendChild(slot);
-    });
-    if (hourlyChart) hourlyChart.destroy();
-    const ctx = $('hourlyChart').getContext('2d');
-    const base = currentAQI;
-    const aqiVals = data.hours.map(h => Math.round(Math.max(10, Math.min(500, base * (0.85 + (h.humidity/100)*0.3 - (h.wind_kph/30)*0.2)))));
-    const grad = ctx.createLinearGradient(0,0,0,100); grad.addColorStop(0,'rgba(79,158,255,.18)'); grad.addColorStop(1,'rgba(79,158,255,0)');
-    hourlyChart = new Chart(ctx, {
-      type:'line',
-      data:{ labels:data.hours.map(h=>h.label), datasets:[{ label:'Est. AQI', data:aqiVals, borderColor:'#4f9eff', backgroundColor:grad, borderWidth:2, tension:0.42, fill:true, pointRadius:3, pointHoverRadius:6, pointBackgroundColor:aqiVals.map(v=>zoneFor(v).color), pointBorderColor:'transparent' }] },
-      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'rgba(10,14,26,.97)', borderColor:'rgba(255,255,255,.1)', borderWidth:1, titleColor:'#7a8aaa', bodyColor:'#e2e8f8', padding:9, callbacks:{ label:ctx=>`AQI ~${ctx.parsed.y} — ${zoneFor(ctx.parsed.y).label}` } } }, scales:{ x:{grid:{display:false},ticks:{color:'#7a8aaa',font:{size:10}},border:{display:false}}, y:{grid:{color:'rgba(255,255,255,.03)'},ticks:{color:'#7a8aaa',font:{size:10}},border:{display:false},min:0} }, interaction:{mode:'index',intersect:false} }
-    });
-  } catch(e) { console.error('Hourly:', e); }
-}
 
 /* ═══════════════════════════════════════════════════
    HISTORICAL CHART
 ═══════════════════════════════════════════════════ */
 async function loadHistory(btn, range) {
   if (btn) { document.querySelectorAll('.rtab').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
-  currentRange = range;
+  currentRange = range || '7d';
   if (!currentCity) return;
   try {
-    const data = await api(`/api/history_range?city=${encodeURIComponent(currentCity)}&range=${range}`);
+    const data = await api(`/api/history_range?city=${encodeURIComponent(currentCity)}&range=${currentRange}`);
     /* Stats */
     $('histStats').innerHTML = [
       {lbl:'Average AQI', val:data.avg, color:zoneFor(data.avg).color},
@@ -394,14 +379,15 @@ async function loadHistory(btn, range) {
       {lbl:'Minimum',     val:data.min, color:zoneFor(data.min).color},
     ].map(it=>`<div class="hs-item"><div class="hs-label">${it.lbl}</div><div class="hs-val" style="color:${it.color}">${it.val}</div></div>`).join('');
     /* Chart */
-    if (histChart) histChart.destroy();
+    if (histChart) { histChart.destroy(); histChart = null; }
     const ctx = $('histChart').getContext('2d');
     const ptColors = data.values.map(v => zoneFor(v).color);
     const grad = ctx.createLinearGradient(0,0,0,260); grad.addColorStop(0,'rgba(79,158,255,.22)'); grad.addColorStop(1,'rgba(79,158,255,.0)');
+    const rng = currentRange;
     histChart = new Chart(ctx, {
-      type: range==='monthly'?'bar':'line',
-      data:{ labels:data.dates, datasets:[{ label:'AQI', data:data.values, borderColor:'#4f9eff', backgroundColor:range==='monthly'?ptColors.map(c=>c+'bb'):grad, borderWidth:range==='monthly'?0:2.5, tension:0.35, fill:range!=='monthly', pointRadius:range==='7d'?5:2, pointHoverRadius:7, pointBackgroundColor:ptColors, pointBorderColor:'transparent', borderRadius:range==='monthly'?6:0 }] },
-      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'rgba(10,14,26,.97)', borderColor:'rgba(255,255,255,.1)', borderWidth:1, titleColor:'#7a8aaa', bodyColor:'#e2e8f8', padding:11, callbacks:{ label:ctx=>` AQI: ${ctx.parsed.y} — ${zoneFor(ctx.parsed.y).label}` } } }, scales:{ x:{grid:{color:'rgba(255,255,255,.03)'},ticks:{color:'#7a8aaa',font:{size:11},maxTicksLimit:range==='monthly'?12:10},border:{color:'rgba(255,255,255,.04)'}}, y:{min:0,suggestedMax:500,grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#7a8aaa',font:{size:11}},border:{color:'rgba(255,255,255,.04)'}} }, interaction:{mode:'index',intersect:false} }
+      type: rng==='monthly'?'bar':'line',
+      data:{ labels:data.dates, datasets:[{ label:'AQI', data:data.values, borderColor:'#4f9eff', backgroundColor:rng==='monthly'?ptColors.map(c=>c+'bb'):grad, borderWidth:rng==='monthly'?0:2.5, tension:0.35, fill:rng!=='monthly', pointRadius:rng==='7d'?5:2, pointHoverRadius:7, pointBackgroundColor:ptColors, pointBorderColor:'transparent', borderRadius:rng==='monthly'?6:0 }] },
+      options:{ responsive:true, maintainAspectRatio:false, animation:{ duration:600 }, plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'rgba(10,14,26,.97)', borderColor:'rgba(255,255,255,.1)', borderWidth:1, titleColor:'#7a8aaa', bodyColor:'#e2e8f8', padding:11, callbacks:{ label:c=>` AQI: ${c.parsed.y} — ${zoneFor(c.parsed.y).label}` } } }, scales:{ x:{grid:{color:'rgba(255,255,255,.03)'},ticks:{color:'#7a8aaa',font:{size:11},maxTicksLimit:rng==='monthly'?12:10},border:{color:'rgba(255,255,255,.04)'}}, y:{min:0,suggestedMax:500,grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#7a8aaa',font:{size:11}},border:{color:'rgba(255,255,255,.04)'}} }, interaction:{mode:'index',intersect:false} }
     });
   } catch(e) { console.error('History:', e); }
 }

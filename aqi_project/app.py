@@ -219,6 +219,59 @@ def live_aqi():
 
 @app.route('/api/weather')
 def weather():
+    city = request.args.get('city', 'Delhi').strip()
+
+    # normalize city names
+    aliases = {
+        'Bengaluru': 'Bangalore',
+        'Bombay': 'Mumbai',
+        'Calcutta': 'Kolkata',
+        'Madras': 'Chennai',
+        'New Delhi': 'Delhi'
+    }
+
+    city = aliases.get(city, city)
+
+    lat, lon = CITY_COORDS.get(city, CITY_COORDS['Delhi'])
+
+    try:
+        url = f'https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={OW_KEY}&units=metric'
+        res = requests.get(url, timeout=8).json()
+
+        if str(res.get("cod")) != "200":
+            return jsonify({
+                "error": res.get("message", "Weather API failed"),
+                "temp": None,
+                "humidity": None,
+                "pressure": None,
+                "wind_speed": None,
+                "description": "Unavailable",
+                "icon": "02d",
+                "visibility": None
+            })
+
+        return jsonify({
+            "temp": round(res["main"]["temp"], 1),
+            "feels_like": round(res["main"]["feels_like"], 1),
+            "humidity": res["main"]["humidity"],
+            "pressure": res["main"]["pressure"],
+            "wind_speed": round(res["wind"]["speed"] * 3.6, 1),
+            "description": res["weather"][0]["description"].title(),
+            "icon": res["weather"][0]["icon"],
+            "visibility": round(res.get("visibility", 0) / 1000, 1)
+        })
+
+    except Exception as e:
+        return jsonify({
+            "error": str(e),
+            "temp": None,
+            "humidity": None,
+            "pressure": None,
+            "wind_speed": None,
+            "description": "Unavailable",
+            "icon": "02d",
+            "visibility": None
+        })
     city = request.args.get('city','Delhi')
     lat, lon = CITY_COORDS.get(city, (28.6139, 77.2090))
     try:
@@ -235,8 +288,8 @@ def weather():
             'visibility':  res.get('visibility',0)//1000,
         })
     except Exception as e:
-        return jsonify({'error': str(e), 'temp':28,'humidity':65,'pressure':1012,
-                        'wind_speed':12,'description':'Partly Cloudy','icon':'02d','visibility':8})
+        return jsonify({'error': str(e), 'temp': None, 'humidity': None, 'pressure': None,
+                        'wind_speed': None, 'description': 'Data unavailable', 'icon': '02d', 'visibility': None})
 
 @app.route('/api/forecast')
 def forecast():
@@ -381,6 +434,7 @@ def hourly_forecast():
         return jsonify({'hours': hours})
 
 @app.route('/api/wind')
+
 def wind():
     """Detailed wind data."""
     city = request.args.get('city', 'Delhi')
@@ -411,9 +465,9 @@ def wind():
             'dispersion': dispersion,
             'beaufort':   int(speed_ms**0.666 * 0.8 + 0.5),
         })
-    except:
-        return jsonify({'speed_kph':12,'gust_kph':18,'deg':225,'direction':'SW',
-                        'dispersion':'Moderate — Gradual pollutant dispersal','beaufort':3})
+    except Exception as e:
+        return jsonify({'error': str(e), 'speed_kph': None, 'gust_kph': None, 'deg': 0,
+                        'direction': '—', 'dispersion': 'Data unavailable', 'beaufort': 0})
 
 @app.route('/api/history_range')
 def history_range():

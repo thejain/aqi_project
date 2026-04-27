@@ -193,8 +193,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .hs-item{}
 .hs-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px}
 .hs-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700}
-.hist-chart-wrap{height:255px}
-
+.hist-chart-wrap{height:255px;position:relative;width:100%}
 /* ══════════════════════════════════════
    SCALE REFERENCE
 ══════════════════════════════════════ */
