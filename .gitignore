@@ -2,3 +2,5 @@
 __pycache__/
 *.pyc
 .vscode/
+model.pkl
+aqi_project/model.pkl
