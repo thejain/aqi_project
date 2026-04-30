@@ -97,6 +97,22 @@ http://127.0.0.1:5000
 
 ## 🚀 Deployment
 
+### Render Deployment
+
+1. **Create a new Render Web Service** and connect your Git repository.
+2. Set the service type to **Web Service** and the environment to **Python**.
+3. Use the build command:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Use the start command:
+   ```bash
+   gunicorn --bind 0.0.0.0:$PORT app:app
+   ```
+5. Set the environment variable `OPENWEATHER_API_KEY` in Render dashboard settings.
+
+If you prefer Docker on Render, the included `Dockerfile` now uses dynamic `$PORT` binding.
+
 ### Heroku Deployment
 
 1. **Install Heroku CLI** and login:

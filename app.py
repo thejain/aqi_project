@@ -272,24 +272,6 @@ def weather():
             "icon": "02d",
             "visibility": None
         })
-    city = request.args.get('city','Delhi')
-    lat, lon = CITY_COORDS.get(city, (28.6139, 77.2090))
-    try:
-        url = f'https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={OW_KEY}&units=metric'
-        res = requests.get(url, timeout=8).json()
-        return jsonify({
-            'temp':        round(res['main']['temp'],1),
-            'feels_like':  round(res['main']['feels_like'],1),
-            'humidity':    res['main']['humidity'],
-            'pressure':    res['main']['pressure'],
-            'wind_speed':  round(res['wind']['speed']*3.6,1),  # m/s → km/h
-            'description': res['weather'][0]['description'].title(),
-            'icon':        res['weather'][0]['icon'],
-            'visibility':  res.get('visibility',0)//1000,
-        })
-    except Exception as e:
-        return jsonify({'error': str(e), 'temp': None, 'humidity': None, 'pressure': None,
-                        'wind_speed': None, 'description': 'Data unavailable', 'icon': '02d', 'visibility': None})
 
 @app.route('/api/forecast')
 def forecast():
