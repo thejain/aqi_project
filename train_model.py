@@ -55,8 +55,14 @@ def train():
     X_test,  y_test  = X[test_mask],  y[test_mask]
     print(f"Train: {len(X_train)}, Test: {len(X_test)}")
 
-    model = RandomForestRegressor(n_estimators=300, max_depth=25, min_samples_leaf=1,
-                                   max_features='sqrt', n_jobs=-1, random_state=42, oob_score=True)
+    model = RandomForestRegressor(
+    n_estimators=60,
+    max_depth=10,
+    min_samples_leaf=2,
+    max_features='sqrt',
+    n_jobs=1,
+    random_state=42)
+    
     model.fit(X_train, y_train)
 
     y_pred  = model.predict(X_test)
