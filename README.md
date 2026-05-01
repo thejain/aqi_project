@@ -103,7 +103,7 @@ http://127.0.0.1:5000
 2. Set the service type to **Web Service** and the environment to **Python**.
 3. Use the build command:
    ```bash
-   pip install -r requirements.txt
+   pip install -r requirements.txt && python train_model.py
    ```
 4. Use the start command:
    ```bash

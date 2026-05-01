@@ -33,13 +33,27 @@ app = Flask(__name__)
 
 # ─── Load model & data ───────────────────────────────────────────────────────
 print("Loading model...")
-artifact  = joblib.load(MODEL_PATH)
-MODEL     = artifact['model']
-FEATURES  = artifact['features']
-LE        = artifact['label_encoder']
-ACCURACY  = artifact['accuracy']
-MONTHLY   = artifact['monthly_avg']    # City × month → hist_monthly_aqi
-CITY_STATS= artifact['city_stats']     # City → mean, std
+
+try:
+    artifact = joblib.load(MODEL_PATH)
+    MODEL      = artifact['model']
+    FEATURES   = artifact['features']
+    LE         = artifact['label_encoder']
+    ACCURACY   = artifact['accuracy']
+    MONTHLY    = artifact['monthly_avg']
+    CITY_STATS = artifact['city_stats']
+    print("Model loaded successfully")
+
+except Exception as e:
+    print("Model not found or failed to load:", e)
+
+    MODEL = None
+    FEATURES = []
+    LE = None
+    ACCURACY = 0
+    MONTHLY = {}
+    CITY_STATS = {}
+
 
 print("Loading dataset...")
 DF = pd.read_csv(DATA_PATH, parse_dates=['Datetime'])
@@ -305,7 +319,10 @@ def forecast():
             benzene=float(last['Benzene']), toluene=float(last['Toluene']),
             xylene=float(last['Xylene']),
         )
-        aqi_pred = round(float(MODEL.predict([feat_row])[0]),1)
+        if MODEL is None:
+            aqi_pred = 100.0  # fallback
+        else:
+            aqi_pred = round(float(MODEL.predict([feat_row])[0]),1)
         aqi_pred = max(0, min(500, aqi_pred))
         predictions.append({
             'date':   target_date.strftime('%d %b %Y'),

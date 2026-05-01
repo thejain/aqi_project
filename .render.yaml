@@ -3,5 +3,5 @@ services:
     name: aqi-dashboard
     env: python
     branch: main
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt && python train_model.py
     startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
